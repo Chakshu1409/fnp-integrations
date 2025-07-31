@@ -481,4 +481,4 @@ For questions or issues:
 1. Check this README first
 2. Review the example code in `ConfigController` and `ExternalApiService`
 3. Check the logs for detailed error information
-4. Contact the team lead for additional guidance 
+4. Contact the team lead for additional guidance # fnp-integrations
