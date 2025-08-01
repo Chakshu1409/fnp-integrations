@@ -1,5 +1,7 @@
 package com.fnp.integrations.lalamove.services;
 
+import com.fnp.integrations.lalamove.dtos.LalamoveOrderRequestWrapper;
+import com.fnp.integrations.lalamove.dtos.LalamoveOrderResponseDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -49,12 +51,10 @@ public class LalamoveService {
         String requestJson;
         try {
             requestJson = objectMapper.writeValueAsString(request);
-            log.info("Request JSON: {}", requestJson);
         } catch (Exception e) {
             throw new RuntimeException("Error converting request to JSON", e);
         }
         String rawSignature = timestamp + "\r\n" + method + "\r\n" + path + "\r\n\r\n" + requestJson;
-        log.info("Raw signature: {}", rawSignature);
 
         String signature;
         try {
@@ -62,9 +62,6 @@ public class LalamoveService {
         } catch (Exception e) {
             throw new RuntimeException("Error generating signature", e);
         }
-        
-        log.info("Generated signature: {}", signature);
-        log.info("Authorization header: hmac {}:{}:{}", appKey, timestamp, signature);
         
         // Create headers
         HttpHeaders headers = new HttpHeaders();
@@ -85,6 +82,52 @@ public class LalamoveService {
         log.info("Response status: {}", response.getStatusCode());
         log.info("Response body: {}", response.getBody());
         
+        return response.getBody();
+    }
+
+    public LalamoveOrderResponseDto placeOrders(LalamoveOrderRequestWrapper request) {
+        RestTemplate restTemplate = new RestTemplate();
+        log.info("hi");
+        String method = "POST";
+        String path = "/v3/orders";
+        long timestampMillis = System.currentTimeMillis();
+        String timestamp = String.valueOf(timestampMillis);
+
+        // Convert class to JSON via object mapper instead of toString
+        ObjectMapper objectMapper = new ObjectMapper();
+        String requestJson;
+        try {
+            requestJson = objectMapper.writeValueAsString(request);
+            log.info("Request JSON: {}", requestJson);
+        } catch (Exception e) {
+            throw new RuntimeException("Error converting request to JSON", e);
+        }
+        log.info("Complete Request order: {}", requestJson);
+        String rawSignature = timestamp + "\r\n" + method + "\r\n" + path + "\r\n\r\n" + requestJson;
+        log.info("Raw signature: {}", rawSignature);
+
+        String signature;
+        try {
+            signature = generateHmacSHA256(rawSignature, appSecret);
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating signature", e);
+        }
+
+        log.info("Generated signature: {}", signature);
+        log.info("Authorization header order: hmac {}:{}:{}", appKey, timestamp, signature);
+
+        // Create headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+        headers.set("Authorization", "hmac " + appKey + ":" + timestamp + ":" + signature);
+        headers.set("market", market);
+
+        HttpEntity<LalamoveOrderRequestWrapper> entity = new HttpEntity<>(request, headers);
+
+        String url = "https://" + hostname + "/v3/orders";
+
+        ResponseEntity<LalamoveOrderResponseDto> response=restTemplate.exchange(url, HttpMethod.POST, entity, LalamoveOrderResponseDto.class);
+
         return response.getBody();
     }
 
