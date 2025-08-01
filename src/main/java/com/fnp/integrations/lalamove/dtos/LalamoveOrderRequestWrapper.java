@@ -1,5 +1,6 @@
 package com.fnp.integrations.lalamove.dtos;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -15,7 +16,9 @@ public class LalamoveOrderRequestWrapper {
         private String quotationId;
         private Sender sender;
         private List<Recipient> recipients;
+        @JsonProperty("isPODEnabled")
         private boolean isPODEnabled;
+        @JsonProperty("isRecipientSMSEnabled")
         private boolean isRecipientSMSEnabled;
         private String partner;
         private Metadata metadata;
@@ -38,6 +41,7 @@ public class LalamoveOrderRequestWrapper {
 
     @Data
     public static class Metadata {
+        @JsonProperty("MerchantId")
         private String MerchantId;
         private String restaurntName;
     }
